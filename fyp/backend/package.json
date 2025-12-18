@@ -1,0 +1,24 @@
+{
+  "name": "saan-backend",
+  "version": "1.0.0",
+  "description": "Backend for SAN - Venue Booking System",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed": "node scripts/seedUsers.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^9.0.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "joi": "^17.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
