@@ -2,6 +2,8 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import config from '../config/config.js';
+import EmailVerification from "../models/EmailVerification.js";
+import { sendEmail } from "../config/mailer.js";
 
 // Register new user or venue owner
 export const register = async (req, res) => {

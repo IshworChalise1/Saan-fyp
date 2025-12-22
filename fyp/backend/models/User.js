@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin', 'venue-owner'],
     default: 'user'
   },
+  emailVerified: {
+  type: Boolean,
+  default: false
+},
+
   createdAt: {
     type: Date,
     default: Date.now

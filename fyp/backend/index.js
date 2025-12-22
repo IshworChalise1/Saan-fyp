@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import config from './config/config.js';
+import emailVerificationRoutes from "./routes/emailVerificationRoutes.js";
 
 // Import routes
 import authRoute from './route/authRoute.js';
@@ -47,6 +48,10 @@ app.use((req, res) => {
     message: 'Route not found'
   });
 });
+
+
+
+app.use("/api/email", emailVerificationRoutes);
 
 // Error handler
 app.use((error, req, res, next) => {
