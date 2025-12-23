@@ -1,13 +1,17 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import config from './config/config.js';
-import emailVerificationRoutes from "./routes/emailVerificationRoutes.js";
+
+// Load environment variables
+dotenv.config();
 
 // Import routes
 import authRoute from './route/authRoute.js';
 import venueRoute from './route/venueRoute.js';
 import bookingRoute from './route/bookingRoute.js';
+import otpRoutes from './route/otpRoutes.js';
 
 const app = express();
 
@@ -40,6 +44,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoute);
 app.use('/api/venues', venueRoute);
 app.use('/api/bookings', bookingRoute);
+app.use('/api/otp', otpRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -48,10 +53,6 @@ app.use((req, res) => {
     message: 'Route not found'
   });
 });
-
-
-
-app.use("/api/email", emailVerificationRoutes);
 
 // Error handler
 app.use((error, req, res, next) => {

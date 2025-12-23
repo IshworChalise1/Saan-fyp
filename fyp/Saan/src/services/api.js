@@ -47,6 +47,42 @@ export const authAPI = {
   },
 };
 
+// OTP API calls
+export const otpAPI = {
+  sendOtp: async (email, name) => {
+    const response = await fetch(`${API_URL}/otp/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, name }),
+    });
+    return response.json();
+  },
+
+  verifyOtp: async (email, otp) => {
+    const response = await fetch(`${API_URL}/otp/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp }),
+    });
+    return response.json();
+  },
+
+  resendOtp: async (email, name) => {
+    const response = await fetch(`${API_URL}/otp/resend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, name }),
+    });
+    return response.json();
+  },
+};
+
 // Venue API calls
 export const venueAPI = {
   getApprovedVenues: async () => {

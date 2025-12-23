@@ -1,9 +1,9 @@
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Otp from '../models/Otp.js';
 import config from '../config/config.js';
-import EmailVerification from "../models/EmailVerification.js";
-import { sendEmail } from "../config/mailer.js";
+import { sendOtpEmail } from '../config/mailer.js';
 
 // Register new user or venue owner
 export const register = async (req, res) => {
@@ -30,33 +30,46 @@ export const register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Create new user
+    // Create new user (emailVerified defaults to false)
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      emailVerified: false
     });
 
-    // TODO: If role is venue-owner, create venue document with venueName, venueType, venueCity
-    // This will be handled in the Venue controller
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: newUser._id, email: newUser.email, role: newUser.role },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpire }
-    );
+    // Delete any existing OTPs for this email
+    await Otp.deleteMany({ email: email.toLowerCase() });
+
+    // Save OTP to database
+    await Otp.create({
+      email: email.toLowerCase(),
+      otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    });
+
+    // Send OTP email
+    try {
+      await sendOtpEmail(email, otp, name);
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError);
+      // Don't fail registration if email fails, user can request resend
+    }
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
-      token,
+      message: 'User registered successfully. Please verify your email with the OTP sent.',
+      requiresVerification: true,
       user: {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        emailVerified: false
       }
     });
   } catch (error) {
@@ -94,11 +107,24 @@ export const login = async (req, res) => {
 
     // Compare password
     const isPasswordValid = await bcryptjs.compare(password, user.password);
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
+      });
+    }
+
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email before logging in',
+        requiresVerification: true,
+        user: {
+          email: user.email,
+          name: user.name
+        }
       });
     }
 
@@ -117,7 +143,8 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        emailVerified: user.emailVerified
       }
     });
   } catch (error) {
