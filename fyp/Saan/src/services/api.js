@@ -190,3 +190,17 @@ export const bookingAPI = {
     return response.json();
   },
 };
+
+export const venues = [
+  { id: '1', name: 'Grand Hall', image: 'https://via.placeholder.com/640x360?text=Grand+Hall' },
+  { id: '2', name: 'Garden Plaza', image: 'https://via.placeholder.com/640x360?text=Garden+Plaza' },
+  { id: '3', name: 'Skyline Roof', image: 'https://via.placeholder.com/640x360?text=Skyline+Roof' }
+];
+
+export function getVenues() {
+  return venues;
+}
+
+export function getVenueById(id) {
+  return venues.find(v => v.id === id);
+}

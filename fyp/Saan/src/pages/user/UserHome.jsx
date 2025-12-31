@@ -1,5 +1,17 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { 
+  FaSearch, 
+  FaMapMarkerAlt, 
+  FaUsers, 
+  FaStar, 
+  FaCalendarAlt,
+  FaFacebookF, 
+  FaInstagram, 
+  FaTiktok,
+  FaChevronDown,
+  FaUser
+} from "react-icons/fa";
 
 function UserHome() {
   const navigate = useNavigate();
@@ -9,6 +21,8 @@ function UserHome() {
     date: "",
     attendees: "",
   });
+
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   // Check if user is logged in
   React.useEffect(() => {
@@ -29,359 +43,434 @@ function UserHome() {
   const venues = [
     {
       id: 1,
-      name: "SAN",
+      name: "Grand SAN Banquet",
       image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdQd25EXYnIuCtQZqKaNwn9cYdsAO3S0KErw&s",
+        "https://images.unsplash.com/photo-1519677100203-3f3e5d046410?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       rating: 4.8,
       location: "Kathmandu, Kapan",
       capacity: 500,
       type: "Wedding",
+      price: "NPR 250,000",
     },
     {
       id: 2,
-      name: "Second venue",
+      name: "Elegant Gardens",
       image:
-        "https://i.pinimg.com/736x/ae/91/8d/ae918d723bcc84209d38b97d0a368819.jpg",
+        "https://images.unsplash.com/photo-1519167758481-dc80ecac1d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       rating: 4.6,
       location: "Chabahil, Kathmandu",
       capacity: 300,
       type: "Wedding",
+      price: "NPR 180,000",
     },
     {
       id: 3,
-      name: " Third Banquit Hall",
+      name: "Corporate Hub",
       image:
-        "https://i.pinimg.com/1200x/45/de/94/45de943be4717f7de5245b8236522b17.jpg",
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       rating: 4.7,
       location: "Thimi, Bhaktapur",
       capacity: 400,
       type: "Corporate",
+      price: "NPR 150,000",
     },
     {
       id: 4,
-      name: "Riverside Hall",
+      name: "Riverside Convention",
       image:
-        "https://i.pinimg.com/736x/16/20/d1/1620d1aef134f60722a9eb07a4c030c4.jpg",
+        "https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       rating: 4.5,
-      location: " Lalitpur, Patan",
+      location: "Lalitpur, Patan",
       capacity: 600,
       type: "Conference",
+      price: "NPR 200,000",
     },
     {
       id: 5,
-      name: "Fifth Resort",
+      name: "Mountain View Resort",
       image:
-        "https://i.pinimg.com/1200x/6b/d0/5e/6bd05e85477e1de00d848b67e75710ec.jpg",
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       rating: 4.9,
-      location: "kathmandu, Nepal",
+      location: "Kathmandu, Nepal",
       capacity: 350,
       type: "Wedding",
+      price: "NPR 300,000",
     },
     {
       id: 6,
-      name: "Food House",
+      name: "Royal Banquet Hall",
       image:
-        "https://i.pinimg.com/736x/c7/ef/b9/c7efb9d3fcdd08634e867c628e48a405.jpg",
+        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       rating: 4.4,
       location: "Lalitpur, Nepal",
       capacity: 250,
       type: "Wedding",
+      price: "NPR 120,000",
     },
   ];
 
+  // Event types for dropdown
+  const eventTypes = [
+    "Wedding", "Corporate", "Birthday", "Conference", "Seminar", "Reception", "Party"
+  ];
+
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Fixed Navigation */}
-      <nav className="fixed top-0 w-full bg-[#5d0f0f] text-white flex items-center justify-between px-8 py-3 shadow-lg z-50">
-        <div className="flex items-center space-x-3">
-          <img
-            src="src/assets/logo.png"
-            alt="SAN Logo"
-            className="w-12 h-12 object-contain"
-          />
-          <span className="text-xl font-bold">SAAN</span>
-        </div>
-
-        <div className="flex space-x-10 text-lg font-medium">
-          <button className="hover:text-gray-300 transition-colors">
-            Product ▾
-          </button>
-          <button className="hover:text-gray-300 transition-colors">
-            Browse Venues
-          </button>
-          <button className="hover:text-gray-300 transition-colors">
-            Blogs
-          </button>
-          <button className="hover:text-gray-300 transition-colors">
-            About us
-          </button>
-        </div>
-
-        <div className="flex space-x-4 items-center">
-          <span className="text-sm">
-            {localStorage.getItem("userName")}
-          </span>
-          <button
-            onClick={handleLogout}
-            className="bg-gray-100 text-black px-4 py-1 rounded hover:bg-gray-300 font-medium transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
-
-      {/* Add padding for fixed navigation */}
-      <div className="pt-20"></div>
-
-      {/* Hero Section */}
-      <div
-        className="relative w-full h-96 bg-cover bg-center"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1519167758481-dc80ecac1d47?w=1200&h=600&fit=crop')`,
-        }}
-      >
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <h1 className="text-5xl font-bold text-white text-center mb-4">
-            FIND YOUR PERFECT SPACE <br />
-            FOR YOUR EVENT.
-          </h1>
-          <p className="text-xl text-gray-200 mb-8">
-            Search unique venues, compare prices and book online now.
-          </p>
-
-          {/* Search Filters */}
-          <div className="flex gap-4 bg-white bg-opacity-90 p-6 rounded-lg shadow-lg flex-wrap justify-center">
-            <select
-              value={searchFilters.eventType}
-              onChange={(e) =>
-                setSearchFilters({ ...searchFilters, eventType: e.target.value })
-              }
-              className="px-4 py-2 rounded border border-gray-300 focus:outline-none text-gray-700"
-            >
-              <option value="">Events</option>
-              <option value="wedding">Wedding</option>
-              <option value="corporate">Corporate</option>
-              <option value="birthday">Birthday</option>
-              <option value="conference">Conference</option>
-            </select>
-
-            <input
-              type="text"
-              placeholder="Location"
-              value={searchFilters.location}
-              onChange={(e) =>
-                setSearchFilters({ ...searchFilters, location: e.target.value })
-              }
-              className="px-4 py-2 rounded border border-gray-300 focus:outline-none text-gray-700"
-            />
-
-            <input
-              type="date"
-              value={searchFilters.date}
-              onChange={(e) =>
-                setSearchFilters({ ...searchFilters, date: e.target.value })
-              }
-              className="px-4 py-2 rounded border border-gray-300 focus:outline-none text-gray-700"
-            />
-
-            <input
-              type="number"
-              placeholder="Attendees"
-              value={searchFilters.attendees}
-              onChange={(e) =>
-                setSearchFilters({
-                  ...searchFilters,
-                  attendees: e.target.value,
-                })
-              }
-              className="px-4 py-2 rounded border border-gray-300 focus:outline-none text-gray-700"
-            />
-
-            <button className="bg-[#5d0f0f] text-white px-8 py-2 rounded hover:bg-[#4a0c0c] font-semibold transition-colors">
-              Explore
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Popular Venues Section */}
-      <div className="max-w-7xl mx-auto w-full py-16 px-6">
-        <h2 className="text-4xl font-bold text-[#5d0f0f] mb-4">Popular Venues</h2>
-        <p className="text-gray-600 mb-12">
-          Discover the best venues for your event
-        </p>
-
-        {/* Venues Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {venues.map((venue) => (
-            <div
-              key={venue.id}
-              className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300"
-            >
-              {/* Venue Image */}
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={venue.image}
-                  alt={venue.name}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-4 right-4 bg-[#5d0f0f] text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  {venue.type}
-                </span>
-              </div>
-
-              {/* Venue Details */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  {venue.name}
-                </h3>
-
-                {/* Rating */}
-                <div className="flex items-center mb-3">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i}>
-                        {i < Math.floor(venue.rating) ? "★" : "☆"}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-gray-700 ml-2 font-semibold">
-                    {venue.rating}
-                  </span>
-                </div>
-
-                {/* Location and Capacity */}
-                <div className="text-gray-600 text-sm mb-4 space-y-1">
-                  <p>📍 {venue.location}</p>
-                  <p>👥 Capacity: {venue.capacity} guests</p>
-                </div>
-
-                {/* Action Button */}
-                <button className="w-full bg-[#5d0f0f] text-white py-2 rounded hover:bg-[#4a0c0c] font-semibold transition-colors">
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="bg-[#5d0f0f] text-white mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-3 items-center mb-8">
-            {/* Left - Logo */}
+      <nav className="fixed top-0 w-full bg-[#5d0f0f] text-white shadow-lg z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo Only - CHANGED BACK TO ORIGINAL */}
             <div className="flex items-center space-x-3">
               <img
                 src="src/assets/logo.png"
                 alt="SAN Logo"
                 className="w-12 h-12 object-contain"
               />
-              <span className="text-xl font-bold">SAAN</span>
+              <span className="text-xl font-bold hidden sm:block">SAAN</span>
             </div>
 
-            {/* Center - Copyright */}
-            <div className="text-center">
-              <p className="text-gray-300 text-sm">
-                &copy; 2025 SAAN Venues. All rights reserved.
-              </p>
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex space-x-8">
+              <button className="flex items-center hover:text-gray-300 transition-colors font-medium">
+                Product <FaChevronDown className="ml-1 text-sm" />
+              </button>
+              <Link 
+                to="/browse-venue" 
+                className="hover:text-gray-300 transition-colors font-medium"
+              >
+                Browse Venues
+              </Link>
+              <button className="hover:text-gray-300 transition-colors font-medium">
+                Blogs
+              </button>
+              <button className="hover:text-gray-300 transition-colors font-medium">
+                About us
+              </button>
             </div>
 
-            {/* Right - Social Media Links */}
-            <div className="flex justify-end space-x-6">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:text-gray-300 transition-colors text-2xl"
-                title="Facebook"
+            {/* User Info and Mobile Menu Button */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full">
+                <FaUser className="text-sm" />
+                <span className="text-sm font-medium">
+                  {localStorage.getItem("userName") || "User"}
+                </span>
+              </div>
+              
+              <button
+                onClick={handleLogout}
+                className="bg-white text-[#5d0f0f] px-4 py-2 rounded-lg hover:bg-gray-100 font-medium transition-colors text-sm"
               >
-                f
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:text-gray-300 transition-colors text-2xl"
-                title="Instagram"
+                Logout
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="lg:hidden p-2 rounded-lg hover:bg-white/10"
               >
-                📷
-              </a>
-              <a
-                href="https://tiktok.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:text-gray-300 transition-colors text-2xl"
-                title="TikTok"
-              >
-                🎵
-              </a>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
             </div>
           </div>
 
-          {/* Footer Bottom */}
-          <div className="border-t border-gray-700 pt-8">
-            <div className="grid grid-cols-3 gap-8 text-sm text-gray-300">
-              <div>
-                <h4 className="font-bold text-white mb-3">Company</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      About Us
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Careers
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Contact
-                    </a>
-                  </li>
-                </ul>
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="lg:hidden bg-[#6a1a1a] py-4 px-4 space-y-3 border-t border-white/10">
+              <button className="flex items-center justify-between w-full py-2 hover:text-gray-300">
+                <span>Product</span>
+                <FaChevronDown className="text-sm" />
+              </button>
+              <Link 
+                to="/browse-venue" 
+                className="block py-2 hover:text-gray-300"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Browse Venues
+              </Link>
+              <button className="block w-full text-left py-2 hover:text-gray-300">
+                Blogs
+              </button>
+              <button className="block w-full text-left py-2 hover:text-gray-300">
+                About us
+              </button>
+              <div className="pt-4 border-t border-white/10">
+                <div className="flex items-center space-x-2">
+                  <FaUser className="text-sm" />
+                  <span className="text-sm">
+                    {localStorage.getItem("userName") || "User"}
+                  </span>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-white mb-3">Support</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Help Center
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Safety
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Terms
-                    </a>
-                  </li>
-                </ul>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Add padding for fixed navigation */}
+      <div className="pt-16"></div>
+
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-[#5d0f0f] to-[#7a1c1c]">
+        <div className="absolute inset-0 bg-black opacity-50">
+          <img
+            src="https://i.pinimg.com/1200x/0f/53/0f/0f530fc2d1a3feaef403ca936b218ce5.jpg"
+            alt="Background"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              Find Your Perfect Space
+              <br />
+              <span className="text-yellow-300">For Your Special Event</span>
+            </h1>
+            <p className="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">
+              Discover and book unique venues for weddings, corporate events, and celebrations
+            </p>
+
+            {/* Search Filters */}
+            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch />
+                  </div>
+                  <select
+                    value={searchFilters.eventType}
+                    onChange={(e) =>
+                      setSearchFilters({ ...searchFilters, eventType: e.target.value })
+                    }
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] focus:border-transparent text-gray-700 bg-gray-50"
+                  >
+                    <option value="">Event Type</option>
+                    {eventTypes.map((type) => (
+                      <option key={type} value={type.toLowerCase()}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaMapMarkerAlt />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Location"
+                    value={searchFilters.location}
+                    onChange={(e) =>
+                      setSearchFilters({ ...searchFilters, location: e.target.value })
+                    }
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] focus:border-transparent text-gray-700 bg-gray-50"
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaCalendarAlt />
+                  </div>
+                  <input
+                    type="date"
+                    value={searchFilters.date}
+                    onChange={(e) =>
+                      setSearchFilters({ ...searchFilters, date: e.target.value })
+                    }
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] focus:border-transparent text-gray-700 bg-gray-50"
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaUsers />
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Attendees"
+                    value={searchFilters.attendees}
+                    onChange={(e) =>
+                      setSearchFilters({
+                        ...searchFilters,
+                        attendees: e.target.value,
+                      })
+                    }
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] focus:border-transparent text-gray-700 bg-gray-50"
+                  />
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-white mb-3">Legal</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Privacy Policy
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Terms of Service
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Cookie Policy
-                    </a>
-                  </li>
-                </ul>
+              
+              <button className="mt-6 w-full md:w-auto bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white px-8 py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                <FaSearch />
+                <span>Explore Venues</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="bg-white py-12 shadow-sm">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { label: "Venues Listed", value: "200+" },
+              { label: "Happy Customers", value: "5,000+" },
+              { label: "Events Hosted", value: "10,000+" },
+              { label: "Cities Covered", value: "15+" }
+            ].map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-[#5d0f0f] mb-2">{stat.value}</div>
+                <div className="text-gray-600">{stat.label}</div>
               </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Popular Venues Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Popular <span className="text-[#5d0f0f]">Venues</span>
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover the most sought-after venues for your perfect event
+          </p>
+        </div>
+
+        {/* Venues Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {venues.map((venue) => (
+            <div
+              key={venue.id}
+              className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              {/* Venue Image */}
+              <div className="relative h-56 md:h-64 overflow-hidden">
+                <img
+                  src={venue.image}
+                  alt={venue.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4">
+                  <span className="bg-[#5d0f0f] text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+                    {venue.type}
+                  </span>
+                </div>
+                <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm">
+                  {venue.price}
+                </div>
+              </div>
+
+              {/* Venue Details */}
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-bold text-gray-900 line-clamp-1">
+                    {venue.name}
+                  </h3>
+                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded">
+                    <FaStar className="text-yellow-400 mr-1" />
+                    <span className="font-bold text-gray-900">{venue.rating}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center text-gray-600 mb-3">
+                  <FaMapMarkerAlt className="text-gray-400 mr-2" />
+                  <span className="text-sm">{venue.location}</span>
+                </div>
+
+                <div className="flex items-center text-gray-600 mb-6">
+                  <FaUsers className="text-gray-400 mr-2" />
+                  <span className="text-sm">Capacity: {venue.capacity} guests</span>
+                </div>
+
+                <button className="w-full bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-md hover:shadow-lg">
+                  View Details
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* View All Button */}
+        <div className="text-center mt-12">
+          <Link
+            to="/browse-venue"
+            className="inline-block border-2 border-[#5d0f0f] text-[#5d0f0f] hover:bg-[#5d0f0f] hover:text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300"
+          >
+            View All Venues
+          </Link>
+        </div>
+      </div>
+
+      {/* Footer - REMOVED CTA SECTION AND NEWSLETTER */}
+      <footer className="bg-[#3a0a0a] text-white">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Company Info */}
+            <div>
+              <div className="flex items-center space-x-3 mb-6">
+                <img
+                  src="src/assets/logo.png"
+                  alt="SAN Logo"
+                  className="w-12 h-12 object-contain"
+                />
+                <span className="text-xl font-bold">SAAN</span>
+              </div>
+              <p className="text-gray-400 mb-6">
+                Your trusted partner in finding the perfect venue for every occasion.
+              </p>
+              <div className="flex space-x-4">
+                <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <FaFacebookF />
+                </a>
+                <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <FaInstagram />
+                </a>
+                <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+                  <FaTiktok />
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-bold text-lg mb-6">Quick Links</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Browse Venues</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Testimonials</a></li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h4 className="font-bold text-lg mb-6">Support</h4>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">FAQs</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Booking Guide</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; {new Date().getFullYear()} SAAN Venues. All rights reserved.</p>
+            <div className="mt-4 text-sm">
+              <a href="#" className="hover:text-white transition-colors mx-4">Privacy Policy</a>
+              <a href="#" className="hover:text-white transition-colors mx-4">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors mx-4">Cookie Policy</a>
             </div>
           </div>
         </div>
