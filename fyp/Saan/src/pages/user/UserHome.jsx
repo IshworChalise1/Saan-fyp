@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FaSearch, 
@@ -8,24 +8,21 @@ import {
   FaCalendarAlt,
   FaFacebookF, 
   FaInstagram, 
-  FaTiktok,
-  FaChevronDown,
-  FaUser
+  FaTiktok
 } from "react-icons/fa";
+import Navigation from "../../components/Navigation";
 
 function UserHome() {
   const navigate = useNavigate();
-  const [searchFilters, setSearchFilters] = React.useState({
+  const [searchFilters, setSearchFilters] = useState({
     eventType: "",
     location: "",
     date: "",
     attendees: "",
   });
 
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
   // Check if user is logged in
-  React.useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
 
@@ -33,11 +30,6 @@ function UserHome() {
       navigate("/");
     }
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
 
   // Mock venue data
   const venues = [
@@ -114,106 +106,31 @@ function UserHome() {
     "Wedding", "Corporate", "Birthday", "Conference", "Seminar", "Reception", "Party"
   ];
 
+  const handleVenueClick = (venueId) => {
+    navigate(`/venue/${venueId}`);
+  };
+
+  const handleSearch = () => {
+    // Filter venues based on search criteria
+    const filteredVenues = venues.filter(venue => {
+      if (searchFilters.eventType && venue.type !== searchFilters.eventType) return false;
+      if (searchFilters.location && !venue.location.toLowerCase().includes(searchFilters.location.toLowerCase())) return false;
+      // Add more filter logic as needed
+      return true;
+    });
+    
+    // For now, just navigate to browse-venue with filters
+    navigate("/browse-venue", { 
+      state: { 
+        filters: searchFilters 
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Fixed Navigation */}
-      <nav className="fixed top-0 w-full bg-[#5d0f0f] text-white shadow-lg z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo Only - CHANGED BACK TO ORIGINAL */}
-            <div className="flex items-center space-x-3">
-              <img
-                src="src/assets/logo.png"
-                alt="SAN Logo"
-                className="w-12 h-12 object-contain"
-              />
-              <span className="text-xl font-bold hidden sm:block">SAAN</span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex space-x-8">
-              <button className="flex items-center hover:text-gray-300 transition-colors font-medium">
-                Product <FaChevronDown className="ml-1 text-sm" />
-              </button>
-              <Link 
-                to="/browse-venue" 
-                className="hover:text-gray-300 transition-colors font-medium"
-              >
-                Browse Venues
-              </Link>
-              <button className="hover:text-gray-300 transition-colors font-medium">
-                Blogs
-              </button>
-              <button className="hover:text-gray-300 transition-colors font-medium">
-                About us
-              </button>
-            </div>
-
-            {/* User Info and Mobile Menu Button */}
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full">
-                <FaUser className="text-sm" />
-                <span className="text-sm font-medium">
-                  {localStorage.getItem("userName") || "User"}
-                </span>
-              </div>
-              
-              <button
-                onClick={handleLogout}
-                className="bg-white text-[#5d0f0f] px-4 py-2 rounded-lg hover:bg-gray-100 font-medium transition-colors text-sm"
-              >
-                Logout
-              </button>
-
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="lg:hidden p-2 rounded-lg hover:bg-white/10"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {isMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="lg:hidden bg-[#6a1a1a] py-4 px-4 space-y-3 border-t border-white/10">
-              <button className="flex items-center justify-between w-full py-2 hover:text-gray-300">
-                <span>Product</span>
-                <FaChevronDown className="text-sm" />
-              </button>
-              <Link 
-                to="/browse-venue" 
-                className="block py-2 hover:text-gray-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Browse Venues
-              </Link>
-              <button className="block w-full text-left py-2 hover:text-gray-300">
-                Blogs
-              </button>
-              <button className="block w-full text-left py-2 hover:text-gray-300">
-                About us
-              </button>
-              <div className="pt-4 border-t border-white/10">
-                <div className="flex items-center space-x-2">
-                  <FaUser className="text-sm" />
-                  <span className="text-sm">
-                    {localStorage.getItem("userName") || "User"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
+      <Navigation />
+      
       {/* Add padding for fixed navigation */}
       <div className="pt-16"></div>
 
@@ -254,7 +171,7 @@ function UserHome() {
                   >
                     <option value="">Event Type</option>
                     {eventTypes.map((type) => (
-                      <option key={type} value={type.toLowerCase()}>{type}</option>
+                      <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
                 </div>
@@ -307,7 +224,10 @@ function UserHome() {
                 </div>
               </div>
               
-              <button className="mt-6 w-full md:w-auto bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white px-8 py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+              <button 
+                onClick={handleSearch}
+                className="mt-6 w-full md:w-auto bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white px-8 py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+              >
                 <FaSearch />
                 <span>Explore Venues</span>
               </button>
@@ -392,7 +312,10 @@ function UserHome() {
                   <span className="text-sm">Capacity: {venue.capacity} guests</span>
                 </div>
 
-                <button className="w-full bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-md hover:shadow-lg">
+                <button 
+                  onClick={() => handleVenueClick(venue.id)}
+                  className="w-full bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+                >
                   View Details
                 </button>
               </div>
@@ -445,7 +368,7 @@ function UserHome() {
             <div>
               <h4 className="font-bold text-lg mb-6">Quick Links</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Browse Venues</a></li>
+                <li><Link to="/browse-venue" className="text-gray-400 hover:text-white transition-colors">Browse Venues</Link></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Testimonials</a></li>
@@ -456,8 +379,8 @@ function UserHome() {
             <div>
               <h4 className="font-bold text-lg mb-6">Support</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                <li><Link to="/customer-inquiry" className="text-gray-400 hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link to="/customer-inquiry" className="text-gray-400 hover:text-white transition-colors">Contact Us</Link></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">FAQs</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Booking Guide</a></li>
               </ul>

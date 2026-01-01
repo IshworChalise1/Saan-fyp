@@ -11,8 +11,7 @@ import {
   FaCalendarAlt,
   FaStar,
   FaChevronLeft,
-  FaChevronRight,
-  FaHome
+  FaChevronRight
 } from "react-icons/fa";
 
 function BrowseVenue() {
@@ -24,7 +23,7 @@ function BrowseVenue() {
       id: 1,
       name: "Eleven Banquet",
       location: "Kathmandu, Kapan",
-      image: "https://images.unsplash.com/photo-1519677100203-3f3e5d046410?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      image: "https://i.pinimg.com/736x/08/c7/22/08c72296f934193df6155cffb0b10580.jpg",
       rating: 5,
       startingPrice: 800,
       totalCapacity: 1500,
@@ -37,7 +36,7 @@ function BrowseVenue() {
       id: 2,
       name: "AAAA Banquet",
       location: "Chabahil, Kathmandu",
-      image: "https://images.unsplash.com/photo-1519167758481-dc80ecac1d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      image: "https://i.pinimg.com/1200x/45/de/94/45de943be4717f7de5245b8236522b17.jpg",
       rating: 5,
       startingPrice: 1650,
       totalCapacity: 500,
@@ -256,12 +255,12 @@ function BrowseVenue() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navigation />
       
-      {/* Main Content */}
-      <div className="flex flex-col lg:flex-row flex-1 pt-4">
+      {/* Main Content - Remove pt-4 and add mt-16 to account for fixed navbar */}
+      <div className="flex flex-col lg:flex-row flex-1 mt-16">
         {/* Mobile Filter Button */}
         <button
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className="lg:hidden mx-4 mb-4 flex items-center justify-center gap-2 bg-[#5d0f0f] text-white px-4 py-2 rounded-lg font-medium"
+          className="lg:hidden mx-4 my-4 flex items-center justify-center gap-2 bg-[#5d0f0f] text-white px-4 py-2 rounded-lg font-medium"
         >
           <FaFilter />
           {isFilterOpen ? "Hide Filters" : "Show Filters"}
@@ -270,7 +269,7 @@ function BrowseVenue() {
         {/* Left Sidebar - Calendar & Filters */}
         <div className={`
           ${isFilterOpen ? 'block' : 'hidden'}
-          lg:block lg:w-1/4 bg-white border-r border-gray-200 p-6 space-y-8
+          lg:block lg:w-1/4 bg-white border-r border-gray-200 p-6 space-y-8 lg:mt-0
         `}>
           {/* Calendar Section */}
           <div className="bg-white rounded-xl shadow-sm p-4">
@@ -330,7 +329,7 @@ function BrowseVenue() {
             
             {/* Selected Date Info */}
             <div className="mt-6 p-3 bg-[#f8f0f0] rounded-lg border border-[#e8d0d0]">
-              <p className="text-sm text-gray-600 mb-1">Selected Date:</p>
+              <p className="text-sm text-gray-600 mb-1">Date:</p>
               <p className="font-semibold text-gray-800">
                 {selectedDate.toLocaleDateString('en-US', {
                   weekday: 'short',

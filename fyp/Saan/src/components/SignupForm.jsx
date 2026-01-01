@@ -62,7 +62,7 @@ function SignupForm({ onSignup, onBackClick, isLoading = false, error: parentErr
         <option value="venue-owner">Venue Owner</option>
       </select>
 
-      <label className="block font-semibold text-[#5d0f0f] mt-4">Full Name</label>
+      <label className="block font-semibold text-[#5d0f0f] mt-4">User Name</label>
       <input
         type="text"
         name="name"
