@@ -7,7 +7,6 @@ import OtpVerificationModal from "../../components/OtpVerificationModal";
 import SuccessModal from "../../components/SuccessModal";
 import { authAPI, otpAPI } from "../../services/api";
 
-
 function LoginPage() {
   const navigate = useNavigate();
   const [showSignup, setShowSignup] = React.useState(false);
@@ -17,55 +16,36 @@ function LoginPage() {
   const [pendingUser, setPendingUser] = React.useState(null);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
 
+  /* ========================= LOGIC ========================= */
   const handleLogin = async (email, password) => {
     setIsLoading(true);
     setError("");
     try {
-      console.log("Attempting login with:", email);
       const response = await authAPI.login(email, password);
 
-      console.log("Login response:", response);
-
       if (response.success) {
-        // Store token and user info
         localStorage.setItem("token", response.token);
         localStorage.setItem("userRole", response.user.role);
         localStorage.setItem("userId", response.user.id);
         localStorage.setItem("userName", response.user.name);
         localStorage.setItem("userEmail", response.user.email);
 
-        console.log("User data stored. Role:", response.user.role);
-
-        // Redirect based on actual role from backend
-        const actualRole = response.user.role;
-        console.log("Redirecting to:", actualRole);
-
-        if (actualRole === "admin") {
-          navigate("/admin-dashboard");
-        } else if (actualRole === "venue-owner") {
-          navigate("/venue-dashboard");
-        } else if (actualRole === "user") {
-          navigate("/home");
-        } else {
-          console.error("Unknown role:", actualRole);
-          setError(`Unknown role: ${actualRole}`);
-        }
+        const role = response.user.role;
+        if (role === "admin") navigate("/admin/dashboard");
+        else if (role === "venue-owner") navigate("/venue-owner/dashboard");
+        else navigate("/");
       } else if (response.requiresVerification) {
-        // User needs to verify email
         setPendingUser({
           email: response.user.email,
-          name: response.user.name
+          name: response.user.name,
         });
-        // Send OTP for verification
         await otpAPI.resendOtp(response.user.email, response.user.name);
         setShowOtpModal(true);
       } else {
-        console.error("Login failed:", response.message);
-        setError(response.message || "Login failed. Please try again.");
+        setError(response.message || "Login failed.");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.message || "Connection error. Please check if the backend is running.");
+      setError(err.message || "Connection error.");
     } finally {
       setIsLoading(false);
     }
@@ -76,21 +56,18 @@ function LoginPage() {
     setError("");
     try {
       const response = await authAPI.register(formData);
-
       if (response.success) {
-        // Show OTP verification modal
         setPendingUser({
           email: formData.email,
-          name: formData.name
+          name: formData.name,
         });
         setShowOtpModal(true);
         setShowSignup(false);
       } else {
-        setError(response.message || "Signup failed. Please try again.");
+        setError(response.message || "Signup failed.");
       }
     } catch (err) {
-      setError("Connection error. Please check if the backend is running.");
-      console.error("Signup error:", err);
+      setError("Connection error.");
     } finally {
       setIsLoading(false);
     }
@@ -102,94 +79,54 @@ function LoginPage() {
     setShowSuccessModal(true);
   };
 
-  const handleSuccessModalClose = () => {
-    setShowSuccessModal(false);
-  };
-
   const handleOtpModalClose = () => {
     setShowOtpModal(false);
-    setError("Please verify your email to complete registration. You can login and verify later.");
+    setError("Please verify your email to continue.");
   };
 
-  if (showSignup) {
-    return (
-      <div className="min-h-screen bg-gray-200 flex flex-col">
-        <Navigation />
-
-        {/* Page Layout */}
-        <div className="flex flex-1 items-center justify-center px-10 py-10 space-x-16">
-          {/* Left Image */}
-          <div className="w-[420px] h-auto shadow-xl rounded-lg overflow-hidden">
-            <img
-              src="src/assets/loginpage.png"
-              alt="Decor"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Signup Form Component */}
-          <SignupForm
-            onSignup={handleSignup}
-            onBackClick={() => {
-              setShowSignup(false);
-              setError("");
-            }}
-            isLoading={isLoading}
-            error={error}
-          />
-        </div>
-
-        {/* OTP Verification Modal */}
-        {showOtpModal && pendingUser && (
-          <OtpVerificationModal
-            email={pendingUser.email}
-            name={pendingUser.name}
-            onVerified={handleOtpVerified}
-            onClose={handleOtpModalClose}
-          />
-        )}
-
-        {/* Success Modal */}
-        {showSuccessModal && (
-          <SuccessModal
-            title="Email Verified!"
-            message="Your email has been verified successfully. You can now login to your account."
-            onClose={handleSuccessModalClose}
-            autoClose={4000}
-          />
-        )}
-      </div>
-    );
-  }
+  /* ========================= UI ========================= */
 
   return (
-    <div className="min-h-screen bg-gray-200 flex flex-col">
+    <div className="relative min-h-screen">
       <Navigation />
 
-      {/* Page Layout */}
-      <div className="flex flex-1 items-center justify-center px-10 py-10 space-x-16">
-        {/* Left Image */}
-        <div className="w-[420px] h-auto shadow-xl rounded-lg overflow-hidden">
-          <img
-            src="src/assets/loginpage.png"
-            alt="Decor"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Login Form Component */}
-        <LoginForm
-          onLogin={handleLogin}
-          onSignupClick={() => {
-            setShowSignup(true);
-            setError("");
-          }}
-          isLoading={isLoading}
-          error={error}
-        />
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('src/assets/loginpage.png')" }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
-      {/* OTP Verification Modal */}
+      {/* Centered Form */}
+      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-64px)] px-4">
+        <div className="w-full max-w-md bg-red/95 backdrop-blur-md rounded-xl shadow-2xl p-8">
+          {showSignup ? (
+            <SignupForm
+              onSignup={handleSignup}
+              onBackClick={() => {
+                setShowSignup(false);
+                setError("");
+              }}
+              isLoading={isLoading}
+              error={error}
+            />
+          ) : (
+            <LoginForm
+              onLogin={handleLogin}
+              onSignupClick={() => {
+                setShowSignup(true);
+                setError("");
+              }}
+              isLoading={isLoading}
+              error={error}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* OTP Modal */}
       {showOtpModal && pendingUser && (
         <OtpVerificationModal
           email={pendingUser.email}
@@ -203,8 +140,8 @@ function LoginPage() {
       {showSuccessModal && (
         <SuccessModal
           title="Email Verified!"
-          message="Your email has been verified successfully. You can now login to your account."
-          onClose={handleSuccessModalClose}
+          message="Your email has been verified successfully. You can now login."
+          onClose={() => setShowSuccessModal(false)}
           autoClose={4000}
         />
       )}

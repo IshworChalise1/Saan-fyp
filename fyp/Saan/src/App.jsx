@@ -1,36 +1,62 @@
-// In your App.jsx or main routing file
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from './components/Navigation';
-import AboutUs from './pages/user/aboutus';
+import AboutUs from './pages/user/AboutUs';
 import BrowseVenue from './pages/user/BrowseVenue';
 import CustomerInquiry from './pages/user/CustomerInquiry';
 import UserHome from './pages/user/UserHome';
+
+// Admin imports
+import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import RegistrationList from './pages/admin/RegistrationList';
+import { UsersPage, VenuesPage, BookingsPage, ReportsPage, SettingsPage } from './pages/admin/PlaceholderPages';
+
+// Venue Owner imports
+import VenueOwnerLayout from './pages/venue-owner/VenueOwnerLayout';
 import VenueDashboard from './pages/venue-owner/VenueDashboard';
+import VenueRegistration from './pages/venue-owner/VenueRegistration';
+import BookingRequests from './pages/venue-owner/BookingRequests';
+import BookingConfirmed from './pages/venue-owner/BookingConfirmed';
+import BookingCompleted from './pages/venue-owner/BookingCompleted';
+import VenueEvents from './pages/venue-owner/VenueEvents';
+import VenueGallery from './pages/venue-owner/VenueGallery';
+import VenueOwnerProfile from './pages/venue-owner/VenueOwnerProfile';
+
+// Auth imports
 import UserLogin from './pages/auth/UserLogin';
 import Signup from './pages/auth/Signup';
 
 function App() {
   const isAuthenticated = () => {
-    return localStorage.getItem('token') !== null;
+    const token = localStorage.getItem('token');
+    return token !== null && token !== 'undefined' && token !== '';
   };
 
-  const ProtectedRoute = ({ children, requiredRole }) => {
+  // Modified ProtectedRoute to handle multiple allowed roles
+  const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     if (!isAuthenticated()) {
-      return <Navigate to="/" />;
+      return <Navigate to="/login" replace />;
     }
 
     const userRole = localStorage.getItem('userRole');
-    if (requiredRole && userRole !== requiredRole) {
-      // Redirect to appropriate home based on role
+    
+    // If no roles specified, allow all authenticated users
+    if (allowedRoles.length === 0) {
+      return children;
+    }
+
+    // Check if user has one of the allowed roles
+    if (!allowedRoles.includes(userRole)) {
+      // Redirect based on user's actual role
       switch(userRole) {
         case 'admin':
-          return <Navigate to="/admin/dashboard" />;
+          return <Navigate to="/admin/dashboard" replace />;
         case 'venue-owner':
-          return <Navigate to="/venue-owner/dashboard" />;
+          return <Navigate to="/venue-owner/dashboard" replace />;
+        case 'user':
         default:
-          return <Navigate to="/home" />;
+          return <Navigate to="/" replace />;
       }
     }
 
@@ -41,87 +67,111 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<UserLogin />} />
+          {/* Public Routes (No Authentication Required) */}
+          <Route path="/login" element={<UserLogin />} />
           <Route path="/signup" element={<Signup />} />
-
-          {/* Protected Routes with Navigation */}
-          <Route 
-            path="/home" 
+          
+          {/* Protected User Routes - Only accessible to authenticated 'user' role */}
+          <Route
+            path="/"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute allowedRoles={['user']}>
                 <>
                   <Navigation />
                   <UserHome />
                 </>
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          <Route 
-            path="/browse-venue" 
+
+          <Route
+            path="/browse-venue"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute allowedRoles={['user', 'admin', 'venue-owner']}>
                 <>
                   <Navigation />
                   <BrowseVenue />
                 </>
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          <Route 
-            path="/about-us" 
+
+          <Route
+            path="/customer-inquiry"
             element={
-              <ProtectedRoute>
-                <>
-                  <Navigation />
-                  <AboutUs />
-                </>
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/customer-inquiry" 
-            element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute allowedRoles={['user', 'admin', 'venue-owner']}>
                 <>
                   <Navigation />
                   <CustomerInquiry />
                 </>
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/dashboard" 
+
+          {/* About Us - Public or protected based on your preference */}
+          <Route
+            path="/about-us"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={['user', 'admin', 'venue-owner']}>
                 <>
                   <Navigation />
-                  <AdminDashboard />
+                  <AboutUs />
                 </>
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          {/* Venue Owner Routes */}
-          <Route 
-            path="/venue-owner/dashboard" 
+
+          {/* Admin Routes with Layout */}
+          <Route
+            path="/admin"
             element={
-              <ProtectedRoute requiredRole="venue-owner">
-                <>
-                  <Navigation />
-                  <VenueDashboard />
-                </>
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout />
               </ProtectedRoute>
-            } 
-          />
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="registrations/all" element={<RegistrationList />} />
+            <Route path="registrations/pending" element={<RegistrationList />} />
+            <Route path="registrations/under-review" element={<RegistrationList />} />
+            <Route path="registrations/approved" element={<RegistrationList />} />
+            <Route path="registrations/rejected" element={<RegistrationList />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="venues" element={<VenuesPage />} />
+            <Route path="bookings" element={<BookingsPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
+
+          {/* Venue Owner Routes with Layout */}
+          <Route
+            path="/venue-owner"
+            element={
+              <ProtectedRoute allowedRoles={['venue-owner']}>
+                <VenueOwnerLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<VenueDashboard />} />
+            <Route path="registration" element={<VenueRegistration />} />
+            <Route path="bookings/requests" element={<BookingRequests />} />
+            <Route path="bookings/confirmed" element={<BookingConfirmed />} />
+            <Route path="bookings/completed" element={<BookingCompleted />} />
+            <Route path="events" element={<VenueEvents />} />
+            <Route path="gallery" element={<VenueGallery />} />
+            <Route path="profile" element={<VenueOwnerProfile />} />
+          </Route>
+
+          {/* Redirect /home to / for backwards compatibility */}
+          <Route path="/home" element={<Navigate to="/" replace />} />
+
+          {/* Catch-all route - redirect to login if not authenticated, or home if authenticated */}
+          <Route path="*" element={
+            isAuthenticated() ? <Navigate to="/" replace /> : <Navigate to="/login" replace />
+          } />
           
-          {/* Catch-all route */}
-          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

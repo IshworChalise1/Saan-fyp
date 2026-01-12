@@ -191,6 +191,222 @@ export const bookingAPI = {
   },
 };
 
+// Venue Registration API calls
+export const venueRegistrationAPI = {
+  // Get my registration status
+  getMyRegistration: async (token) => {
+    const response = await fetch(`${API_URL}/venue-registration/my-registration`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Submit registration with all files
+  submitRegistration: async (token, formData) => {
+    const response = await fetch(`${API_URL}/venue-registration`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - browser will set it with boundary
+      },
+      body: formData,
+    });
+    return response.json();
+  },
+
+  // Upload single document
+  uploadDocument: async (token, fieldName, file) => {
+    const formData = new FormData();
+    formData.append(fieldName, file);
+
+    const response = await fetch(`${API_URL}/venue-registration/upload/${fieldName}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    return response.json();
+  },
+
+  // Add venue images
+  addVenueImages: async (token, files) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('venueImages', file);
+    });
+
+    const response = await fetch(`${API_URL}/venue-registration/venue-images`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    return response.json();
+  },
+
+  // Remove venue image
+  removeVenueImage: async (token, imageId) => {
+    const response = await fetch(`${API_URL}/venue-registration/venue-images/${imageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+};
+
+// Admin Venue Registration API calls
+export const adminVenueRegistrationAPI = {
+  // Get dashboard stats
+  getStats: async (token) => {
+    const response = await fetch(`${API_URL}/venue-registration/admin/stats`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Get all registrations
+  getAllRegistrations: async (token, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/venue-registration/admin/all?${queryString}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Get single registration
+  getRegistration: async (token, id) => {
+    const response = await fetch(`${API_URL}/venue-registration/admin/${id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Review a specific field/document (approve or reject with reason)
+  reviewField: async (token, id, fieldName, status, rejectionReason = null) => {
+    const response = await fetch(`${API_URL}/venue-registration/admin/${id}/review-document`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ documentField: fieldName, status, rejectionReason }),
+    });
+    return response.json();
+  },
+
+  // Approve registration
+  approveRegistration: async (token, id, adminNotes = null) => {
+    const response = await fetch(`${API_URL}/venue-registration/admin/${id}/approve`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ adminNotes }),
+    });
+    return response.json();
+  },
+
+  // Reject registration
+  rejectRegistration: async (token, id, adminNotes) => {
+    const response = await fetch(`${API_URL}/venue-registration/admin/${id}/reject`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ adminNotes }),
+    });
+    return response.json();
+  },
+};
+
+// Notification API calls
+export const notificationAPI = {
+  // Get notifications
+  getNotifications: async (token, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/notifications?${queryString}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Get unread count
+  getUnreadCount: async (token) => {
+    const response = await fetch(`${API_URL}/notifications/unread-count`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Mark notification as read
+  markAsRead: async (token, id) => {
+    const response = await fetch(`${API_URL}/notifications/${id}/read`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Mark all as read
+  markAllAsRead: async (token) => {
+    const response = await fetch(`${API_URL}/notifications/mark-all-read`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Delete notification
+  deleteNotification: async (token, id) => {
+    const response = await fetch(`${API_URL}/notifications/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  // Delete all notifications
+  deleteAllNotifications: async (token) => {
+    const response = await fetch(`${API_URL}/notifications`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+};
+
 export const venues = [
   { id: '1', name: 'Grand Hall', image: 'https://via.placeholder.com/640x360?text=Grand+Hall' },
   { id: '2', name: 'Garden Plaza', image: 'https://via.placeholder.com/640x360?text=Garden+Plaza' },
