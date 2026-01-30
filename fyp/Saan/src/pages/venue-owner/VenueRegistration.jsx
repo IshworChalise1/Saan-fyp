@@ -440,6 +440,8 @@ function VenueRegistration() {
     // Section 4: Venue
     venueName: "",
     venueNameStatus: null,
+    capacity: "",
+    numberOfHalls: "",
 
     // Section 5: Venue Images
     venueImages: [],
@@ -553,6 +555,8 @@ function VenueRegistration() {
               phoneStatus: reg.phoneStatus?.status || null,
               venueName: reg.venueName || "",
               venueNameStatus: reg.venueNameStatus?.status || null,
+              capacity: reg.capacity || "",
+              numberOfHalls: reg.numberOfHalls || "",
 
               // Profile image
               profileImagePreview: reg.profileImage?.url || null,
@@ -658,6 +662,18 @@ function VenueRegistration() {
       newErrors.venueName = "Venue name is required";
     }
 
+    if (!formData.capacity) {
+      newErrors.capacity = "Total capacity is required";
+    } else if (isNaN(formData.capacity) || parseInt(formData.capacity) <= 0) {
+      newErrors.capacity = "Capacity must be a positive number";
+    }
+
+    if (!formData.numberOfHalls) {
+      newErrors.numberOfHalls = "Number of halls is required";
+    } else if (isNaN(formData.numberOfHalls) || parseInt(formData.numberOfHalls) <= 0) {
+      newErrors.numberOfHalls = "Number of halls must be a positive number";
+    }
+
     if (formData.venueImages.length < 3 && formData.venueImagesStatus !== "APPROVED") {
       newErrors.venueImages = "Please upload at least 3 venue images";
     }
@@ -694,12 +710,24 @@ function VenueRegistration() {
     try {
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        showDialog(
+          "error",
+          "Authentication Required",
+          "Your session has expired. Please log in again."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       // Create FormData for file upload
       const submitData = new FormData();
 
       // Add text fields
       submitData.append("phone", formData.phone);
       submitData.append("venueName", formData.venueName);
+      submitData.append("capacity", formData.capacity);
+      submitData.append("numberOfHalls", formData.numberOfHalls);
       submitData.append("province", formData.province);
       submitData.append("district", formData.district);
       submitData.append("municipality", formData.municipality);
@@ -744,6 +772,21 @@ function VenueRegistration() {
             setRegistrationId(response.registration?._id);
           }
         );
+      } else if (response.message && response.message.includes("session has expired")) {
+        // Session expired - redirect to login
+        localStorage.removeItem("token");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userEmail");
+        showDialog(
+          "error",
+          "Session Expired",
+          "Your login session has expired. Please log in again.",
+          () => {
+            window.location.href = "/login";
+          }
+        );
       } else {
         showDialog(
           "error",
@@ -769,7 +812,7 @@ function VenueRegistration() {
       case 1: return formData.fullName && formData.email;
       case 2: return formData.phone && validatePhone(formData.phone);
       case 3: return formData.profileImage || formData.profileImageStatus === "APPROVED";
-      case 4: return formData.venueName;
+      case 4: return formData.venueName && formData.capacity && formData.numberOfHalls;
       case 5: return formData.venueImages.length >= 3 || formData.venueImagesStatus === "APPROVED";
       case 6: return (
         (formData.citizenshipFront || formData.citizenshipFrontStatus === "APPROVED") &&
@@ -1032,21 +1075,59 @@ function VenueRegistration() {
         isLocked={isSectionLocked(formData.venueNameStatus)}
         rejectionReason={rejectionReasons.venueName}
       >
-        <div className="max-w-xl">
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Venue Name</label>
-          <input
-            type="text"
-            value={formData.venueName}
-            onChange={(e) => handleChange("venueName", e.target.value)}
-            placeholder="Enter your venue name"
-            disabled={isSectionLocked(formData.venueNameStatus)}
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]/20 focus:border-[#5d0f0f] ${
-              isSectionLocked(formData.venueNameStatus) ? "bg-gray-50 cursor-not-allowed" :
-              errors.venueName ? "border-red-300" : "border-gray-200"
-            }`}
-          />
-          {errors.venueName && <p className="text-xs text-red-500 mt-1">{errors.venueName}</p>}
-          <p className="text-xs text-gray-400 mt-1.5">Must match your Government / PAN / Business Registration</p>
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Venue Name</label>
+            <input
+              type="text"
+              value={formData.venueName}
+              onChange={(e) => handleChange("venueName", e.target.value)}
+              placeholder="Enter your venue name"
+              disabled={isSectionLocked(formData.venueNameStatus)}
+              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]/20 focus:border-[#5d0f0f] ${
+                isSectionLocked(formData.venueNameStatus) ? "bg-gray-50 cursor-not-allowed" :
+                errors.venueName ? "border-red-300" : "border-gray-200"
+              }`}
+            />
+            {errors.venueName && <p className="text-xs text-red-500 mt-1">{errors.venueName}</p>}
+            <p className="text-xs text-gray-400 mt-1.5">Must match your Government / PAN / Business Registration</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Total Capacity</label>
+              <input
+                type="number"
+                value={formData.capacity}
+                onChange={(e) => handleChange("capacity", e.target.value)}
+                placeholder="e.g., 500"
+                disabled={isSectionLocked(formData.venueNameStatus)}
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]/20 focus:border-[#5d0f0f] ${
+                  isSectionLocked(formData.venueNameStatus) ? "bg-gray-50 cursor-not-allowed" :
+                  errors.capacity ? "border-red-300" : "border-gray-200"
+                }`}
+              />
+              {errors.capacity && <p className="text-xs text-red-500 mt-1">{errors.capacity}</p>}
+              <p className="text-xs text-gray-400 mt-1">Maximum number of guests</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Number of Halls</label>
+              <input
+                type="number"
+                value={formData.numberOfHalls}
+                onChange={(e) => handleChange("numberOfHalls", e.target.value)}
+                placeholder="e.g., 3"
+                disabled={isSectionLocked(formData.venueNameStatus)}
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]/20 focus:border-[#5d0f0f] ${
+                  isSectionLocked(formData.venueNameStatus) ? "bg-gray-50 cursor-not-allowed" :
+                  errors.numberOfHalls ? "border-red-300" : "border-gray-200"
+                }`}
+              />
+              {errors.numberOfHalls && <p className="text-xs text-red-500 mt-1">{errors.numberOfHalls}</p>}
+              <p className="text-xs text-gray-400 mt-1">Total number of event halls</p>
+            </div>
+          </div>
         </div>
       </FormSection>
 

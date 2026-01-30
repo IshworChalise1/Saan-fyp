@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navigation from '../../components/Navigation';
+import { contactAPI } from '../../services/api';
 
 function CustomerInquiry() {
   const [formData, setFormData] = useState({
@@ -8,6 +9,9 @@ function CustomerInquiry() {
     type: 'inquiry',
     message: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -16,21 +20,38 @@ function CustomerInquiry() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setSuccessMessage('');
+    setErrorMessage('');
 
-    // For now, just log data (later you can send to backend)
-    console.log('Customer Message:', formData);
+    try {
+      // Send form data to backend
+      const response = await contactAPI.submitInquiry(formData);
 
-    alert('Your message has been submitted successfully!');
+      if (response.success) {
+        setSuccessMessage(response.message || 'Your message has been sent successfully!');
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          type: 'inquiry',
+          message: '',
+        });
 
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      type: 'inquiry',
-      message: '',
-    });
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000);
+      } else {
+        setErrorMessage(response.message || 'Failed to send your message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setErrorMessage('An error occurred while sending your message. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,6 +64,20 @@ function CustomerInquiry() {
             Customer Inquiry / Complaint
           </h1>
 
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg">
+              ✓ {successMessage}
+            </div>
+          )}
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-800 rounded-lg">
+              ✗ {errorMessage}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
@@ -53,7 +88,8 @@ function CustomerInquiry() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]"
+                disabled={loading}
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -66,7 +102,8 @@ function CustomerInquiry() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]"
+                disabled={loading}
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -77,7 +114,8 @@ function CustomerInquiry() {
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-4 py-2"
+                disabled={loading}
+                className="w-full border rounded-lg px-4 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="inquiry">Inquiry</option>
                 <option value="complaint">Complaint</option>
@@ -92,17 +130,26 @@ function CustomerInquiry() {
                 value={formData.message}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 rows="5"
-                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f]"
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5d0f0f] disabled:bg-gray-100 disabled:cursor-not-allowed"
               ></textarea>
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-[#5d0f0f] text-white py-3 rounded-lg font-medium hover:bg-[#7a1a1a] transition"
+              disabled={loading}
+              className="w-full bg-[#5d0f0f] text-white py-3 rounded-lg font-medium hover:bg-[#7a1a1a] transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Submit
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                'Submit'
+              )}
             </button>
           </form>
         </div>

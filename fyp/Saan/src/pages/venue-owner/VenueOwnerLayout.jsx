@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { NavLink, useNavigate, Outlet, useLocation } from "react-router-dom";
-import { notificationAPI } from "../../services/api";
+import { notificationAPI, venueRegistrationAPI } from "../../services/api";
 
 function VenueOwnerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [venueId, setVenueId] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -18,6 +19,30 @@ function VenueOwnerLayout() {
   useEffect(() => {
     setUserName(localStorage.getItem("userName") || "Venue Owner");
     setUserEmail(localStorage.getItem("userEmail") || "owner@venue.com");
+    
+    // Fetch registration data to get venueId
+    const fetchVenueId = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        
+        const response = await venueRegistrationAPI.getMyRegistration(token);
+        if (response.success && response.registration) {
+          // The venue ID is stored in the registration.venue field
+          const venueIdValue = response.registration.venue || response.registration._id;
+          if (venueIdValue) {
+            setVenueId(venueIdValue);
+            console.log("Venue ID set to:", venueIdValue);
+          } else {
+            console.warn("No venue ID found in registration");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching venue ID:", error);
+      }
+    };
+    
+    fetchVenueId();
   }, []);
 
   // Fetch unread count on mount and periodically
@@ -150,6 +175,7 @@ function VenueOwnerLayout() {
     if (path.includes("/bookings/confirmed")) return { title: "Confirmed Bookings", subtitle: "View your confirmed bookings" };
     if (path.includes("/bookings/completed")) return { title: "Completed Bookings", subtitle: "History of completed events" };
     if (path.includes("/events")) return { title: "Events & Gallery", subtitle: "Showcase your past events" };
+    if (path.includes("/menu")) return { title: "Menu & Package Management", subtitle: "Create menus, packages, and add-ons" };
     if (path.includes("/gallery")) return { title: "Venue Images", subtitle: "Manage your venue photos" };
     if (path.includes("/profile")) return { title: "Settings", subtitle: "Manage your account settings" };
     return { title: "Dashboard", subtitle: "Overview of your venue performance" };
@@ -197,6 +223,16 @@ function VenueOwnerLayout() {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      ),
+    },
+    {
+      path: "/venue-owner/menu",
+      label: "Menu Management",
+      isDynamic: true, // Mark as dynamic
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747S17.5 6.253 12 6.253z" />
         </svg>
       ),
     },
@@ -298,21 +334,41 @@ function VenueOwnerLayout() {
                     )}
                   </div>
                 ) : (
-                  // Regular item
-                  <NavLink
-                    to={item.path}
-                    end={item.path === "/venue-owner/dashboard"}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
+                  // Regular item or dynamic item
+                  item.isDynamic ? (
+                    <button
+                      onClick={() => {
+                        if (venueId) {
+                          navigate(`/venue-owner/menu/${venueId}`);
+                        } else {
+                          alert("Venue ID not found. Please complete your registration first.");
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        location.pathname.includes("/menu")
                           ? "text-[#5d0f0f] bg-[#5d0f0f]/5"
                           : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                      }`
-                    }
-                  >
-                    <span className="text-gray-400">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </NavLink>
+                      }`}
+                    >
+                      <span className="text-gray-400">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
+                  ) : (
+                    <NavLink
+                      to={item.path}
+                      end={item.path === "/venue-owner/dashboard"}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? "text-[#5d0f0f] bg-[#5d0f0f]/5"
+                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        }`
+                      }
+                    >
+                      <span className="text-gray-400">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </NavLink>
+                  )
                 )}
               </li>
             ))}

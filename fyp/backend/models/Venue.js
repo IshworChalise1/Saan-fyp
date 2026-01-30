@@ -25,8 +25,16 @@ const venueSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  phone: {
+    type: String,
+    default: null
+  },
   capacity: {
     type: Number
+  },
+  numberOfHalls: {
+    type: Number,
+    default: 1
   },
   pricePerDay: {
     type: Number

@@ -1,39 +1,71 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { venueRegistrationAPI } from "../../services/api";
+import { venueRegistrationAPI, bookingAPI, menuAPI, packageAPI } from "../../services/api";
 
 function VenueDashboard() {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
   const [registrationData, setRegistrationData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [metrics, setMetrics] = useState({
+    totalBookings: 0,
+    pendingRequests: 0,
+    confirmedEvents: 0,
+    totalMenus: 0,
+    totalPackages: 0
+  });
 
   // Fetch registration status on mount
   useEffect(() => {
-    const fetchRegistration = async () => {
+    const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
         if (!token) {
           setIsLoading(false);
           return;
         }
 
-        const response = await venueRegistrationAPI.getMyRegistration(token);
-        console.log("Registration response:", response); // Debug log
-        if (response.success && response.exists && response.registration) {
-          setRegistrationData(response.registration);
+        // Fetch registration
+        const regResponse = await venueRegistrationAPI.getMyRegistration(token);
+        if (regResponse.success && regResponse.exists && regResponse.registration) {
+          setRegistrationData(regResponse.registration);
+          
+          const venueId = regResponse.registration.venue || regResponse.registration._id;
+          if (venueId) {
+            // Fetch bookings
+            const bookingsResponse = await bookingAPI.getVenueBookings(venueId, token);
+            const bookings = bookingsResponse.bookings || [];
+            const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+            const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length;
+
+            // Fetch menus
+            const menusResponse = await menuAPI.getVenueMenus(venueId);
+            const menus = menusResponse.menus || [];
+
+            // Fetch packages
+            const packagesResponse = await packageAPI.getVenuePackages(venueId);
+            const packages = packagesResponse.packages || [];
+
+            setMetrics({
+              totalBookings: bookings.length,
+              pendingRequests: pendingBookings,
+              confirmedEvents: confirmedBookings,
+              totalMenus: menus.length,
+              totalPackages: packages.length
+            });
+          }
         } else {
           setRegistrationData(null);
         }
       } catch (error) {
-        console.error("Error fetching registration:", error);
+        console.error("Error fetching data:", error);
         setRegistrationData(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchRegistration();
-  }, []);
+    fetchData();
+  }, [token]);
 
   // Helper function to check if any section is rejected
   const hasRejectedSections = () => {
@@ -256,9 +288,8 @@ function VenueDashboard() {
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
       <MetricCard
         title="Total Bookings"
-        value="24"
-        trend="+12% from last month"
-        trendUp={true}
+        value={metrics.totalBookings}
+        subtitle="From all customers"
         icon={
           <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -267,7 +298,7 @@ function VenueDashboard() {
       />
       <MetricCard
         title="Pending Requests"
-        value="5"
+        value={metrics.pendingRequests}
         subtitle="Awaiting your response"
         icon={
           <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,8 +308,8 @@ function VenueDashboard() {
       />
       <MetricCard
         title="Confirmed Events"
-        value="8"
-        subtitle="Upcoming this month"
+        value={metrics.confirmedEvents}
+        subtitle="Bookings confirmed"
         icon={
           <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -286,13 +317,12 @@ function VenueDashboard() {
         }
       />
       <MetricCard
-        title="Monthly Revenue"
-        value="Rs. 85,000"
-        trend="+8% from last month"
-        trendUp={true}
+        title="Total Menus"
+        value={metrics.totalMenus}
+        subtitle={`${metrics.totalPackages} packages`}
         icon={
           <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m0 0h6m-6-6h6m0 0h6" />
           </svg>
         }
       />
@@ -460,39 +490,38 @@ function VenueDashboard() {
   };
 
   const QuickActions = () => {
+    const registrationId = registrationData?._id;
+    // Try to get venueId from venue field first, then fall back to _id
+    const venueId = registrationData?.venue?._id || registrationData?.venue || registrationData?._id;
+    
+    console.log('VenueDashboard - Registration Data:', registrationData);
+    console.log('VenueDashboard - Extracted venueId:', venueId);
+    console.log('VenueDashboard - Button disabled?', !venueId);
+
     const actions = [
       {
-        label: "Add Event",
-        desc: "Create new event",
+        label: "Manage Menu & Packages",
+        desc: "Add menus, items & packages",
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
         ),
-        color: "text-emerald-600 bg-emerald-50",
-        path: "/venue-owner/events",
+        color: "text-orange-600 bg-orange-50",
+        path: venueId ? `/venue-owner/menu/${venueId}` : null,
+        disabled: !venueId,
       },
       {
-        label: "Upload Images",
-        desc: "Add photos",
+        label: "Edit Details",
+        desc: "Update venue info",
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        ),
-        color: "text-purple-600 bg-purple-50",
-        path: "/venue-owner/gallery",
-      },
-      {
-        label: "Manage Venue",
-        desc: "Update details",
-        icon: (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
         ),
         color: "text-blue-600 bg-blue-50",
-        path: "/venue-owner/registration",
+        path: venueId ? `/venue-owner/edit-venue/${venueId}` : null,
+        disabled: !venueId,
       },
       {
         label: "View Bookings",
@@ -514,8 +543,19 @@ function VenueDashboard() {
           {actions.map((a, i) => (
             <button
               key={i}
-              onClick={() => navigate(a.path)}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-center"
+              onClick={() => {
+                if (a.path && !a.disabled) {
+                  navigate(a.path);
+                } else if (a.disabled) {
+                  alert('Pending registration approval. Please complete your registration first.');
+                }
+              }}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors text-center ${
+                a.disabled
+                  ? 'bg-gray-100 opacity-50 cursor-not-allowed'
+                  : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'
+              }`}
+              title={a.disabled ? 'Pending registration approval' : a.label}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${a.color}`}>
                 {a.icon}

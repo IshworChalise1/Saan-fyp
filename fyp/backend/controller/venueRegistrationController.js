@@ -1,5 +1,6 @@
 import VenueRegistration from '../models/VenueRegistration.js';
 import User from '../models/User.js';
+import Venue from '../models/Venue.js';
 import Notification from '../models/Notification.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,7 +28,8 @@ const getFileUrl = (req, filename, folder) => {
 export const getMyRegistration = async (req, res) => {
   try {
     const registration = await VenueRegistration.findOne({ owner: req.userId })
-      .populate('owner', 'name email');
+      .populate('owner', 'name email')
+      .populate('venue', '_id name owner'); // Populate venue details
 
     if (!registration) {
       return res.status(200).json({
@@ -62,6 +64,8 @@ export const createOrUpdateRegistration = async (req, res) => {
     const {
       phone,
       venueName,
+      capacity,
+      numberOfHalls,
       province,
       district,
       municipality,
@@ -115,6 +119,8 @@ export const createOrUpdateRegistration = async (req, res) => {
     const updateData = {
       phone,
       venueName,
+      capacity: capacity ? parseInt(capacity) : undefined,
+      numberOfHalls: numberOfHalls ? parseInt(numberOfHalls) : undefined,
       location: {
         province,
         district,
@@ -755,13 +761,27 @@ export const reviewDocument = async (req, res) => {
  * Approve entire registration
  * PUT /api/venue-registration/admin/:id/approve
  */
+// In venueRegistrationController.js - Update the approveRegistration function
 export const approveRegistration = async (req, res) => {
   try {
     const { id } = req.params;
     const { adminNotes } = req.body;
 
     const reviewedAt = new Date();
-    const registration = await VenueRegistration.findByIdAndUpdate(
+    
+    // First, get the registration
+    const registration = await VenueRegistration.findById(id)
+      .populate('owner', 'name email');
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registration not found'
+      });
+    }
+
+    // Update registration status
+    const updatedRegistration = await VenueRegistration.findByIdAndUpdate(
       id,
       {
         $set: {
@@ -801,11 +821,48 @@ export const approveRegistration = async (req, res) => {
       { new: true }
     ).populate('owner', 'name email');
 
-    if (!registration) {
-      return res.status(404).json({
-        success: false,
-        message: 'Registration not found'
-      });
+    // ✅ CRITICAL: CREATE VENUE FROM APPROVED REGISTRATION
+    try {
+      // Check if venue already exists for this registration
+      const existingVenue = await Venue.findOne({ registration: id });
+      
+      if (!existingVenue) {
+        console.log('Creating venue from approved registration...');
+        
+        // Extract images from venueImages array
+        const venueImages = registration.venueImages?.map(img => img.url) || [];
+        
+        // Create venue from registration data
+        const venueData = {
+          name: registration.venueName || 'New Venue',
+          type: 'banquet',
+          city: registration.location?.district || 'Kathmandu',
+          address: `${registration.location?.street || ''}, Ward ${registration.location?.wardNo || ''}, ${registration.location?.municipality || ''}`,
+          capacity: registration.capacity || 500, // Use capacity from registration
+          numberOfHalls: registration.numberOfHalls || 1, // Use numberOfHalls from registration
+          pricePerDay: 1500, // Default - venue owner can update later
+          description: `Beautiful ${registration.venueName} located in ${registration.location?.municipality || ''}. Perfect for weddings, corporate events, and celebrations.`,
+          amenities: ['AC', 'Parking', 'Catering', 'WiFi', 'Sound System'], // Default amenities
+          owner: registration.owner._id,
+          registration: id, // Link to registration document
+          images: venueImages,
+          phone: registration.phone,
+          isApproved: true // Auto-approve since registration was approved
+        };
+
+        const newVenue = await Venue.create(venueData);
+        console.log(`✅ Venue created successfully: ${newVenue.name} (ID: ${newVenue._id})`);
+        
+        // Also update the registration with venue reference
+        await VenueRegistration.findByIdAndUpdate(id, {
+          $set: { venue: newVenue._id }
+        });
+      } else {
+        console.log(`ℹ️ Venue already exists: ${existingVenue.name}`);
+      }
+    } catch (venueError) {
+      console.error('❌ Error creating venue from registration:', venueError);
+      // Don't fail the approval, but log the error
     }
 
     // Create in-app notification for approval
@@ -821,7 +878,7 @@ export const approveRegistration = async (req, res) => {
             link: '/venue-owner/dashboard'
           }
         );
-        console.log(`In-app approval notification created for ${registration.owner.email}`);
+        console.log(`✅ In-app approval notification created for ${registration.owner.email}`);
       } catch (notifError) {
         console.error('Failed to create in-app approval notification:', notifError);
       }
@@ -833,7 +890,7 @@ export const approveRegistration = async (req, res) => {
           registration.owner.name,
           registration.venueName || 'Your Venue'
         );
-        console.log(`Approval notification email sent to ${registration.owner.email}`);
+        console.log(`✅ Approval notification email sent to ${registration.owner.email}`);
       } catch (emailError) {
         console.error('Failed to send approval notification email:', emailError);
       }
@@ -841,8 +898,8 @@ export const approveRegistration = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Registration approved successfully',
-      registration
+      message: 'Registration approved and venue created successfully',
+      registration: updatedRegistration
     });
   } catch (error) {
     console.error('Approve registration error:', error);
@@ -853,7 +910,6 @@ export const approveRegistration = async (req, res) => {
     });
   }
 };
-
 /**
  * Reject entire registration
  * PUT /api/venue-registration/admin/:id/reject

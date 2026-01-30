@@ -195,69 +195,159 @@ export const bookingAPI = {
 export const venueRegistrationAPI = {
   // Get my registration status
   getMyRegistration: async (token) => {
-    const response = await fetch(`${API_URL}/venue-registration/my-registration`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    return response.json();
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication token is missing. Please log in again.'
+      };
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/venue-registration/my-registration`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      
+      if (!response.ok && data.message === 'Invalid token') {
+        return {
+          success: false,
+          message: 'Your session has expired. Please log in again.',
+          status: response.status
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Network error: Unable to connect to server',
+        error: error.message
+      };
+    }
   },
 
   // Submit registration with all files
   submitRegistration: async (token, formData) => {
-    const response = await fetch(`${API_URL}/venue-registration`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type for FormData - browser will set it with boundary
-      },
-      body: formData,
-    });
-    return response.json();
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication token is missing. Please log in again.'
+      };
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/venue-registration`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - browser will set it with boundary
+        },
+        body: formData,
+      });
+      const data = await response.json();
+      
+      if (!response.ok && data.message === 'Invalid token') {
+        return {
+          success: false,
+          message: 'Your session has expired. Please log in again.',
+          status: response.status
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Network error: Unable to connect to server',
+        error: error.message
+      };
+    }
   },
 
   // Upload single document
   uploadDocument: async (token, fieldName, file) => {
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication token is missing. Please log in again.'
+      };
+    }
+
     const formData = new FormData();
     formData.append(fieldName, file);
 
-    const response = await fetch(`${API_URL}/venue-registration/upload/${fieldName}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/venue-registration/upload/${fieldName}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      return response.json();
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Network error: Unable to connect to server',
+        error: error.message
+      };
+    }
   },
 
   // Add venue images
-  addVenueImages: async (token, files) => {
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('venueImages', file);
-    });
+  addVenueImages: async (token, formData) => {
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication token is missing. Please log in again.'
+      };
+    }
 
-    const response = await fetch(`${API_URL}/venue-registration/venue-images`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/venue-registration/venue-images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      return response.json();
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Network error: Unable to connect to server',
+        error: error.message
+      };
+    }
   },
 
   // Remove venue image
   removeVenueImage: async (token, imageId) => {
-    const response = await fetch(`${API_URL}/venue-registration/venue-images/${imageId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    return response.json();
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication token is missing. Please log in again.'
+      };
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/venue-registration/venue-images/${imageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return response.json();
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Network error: Unable to connect to server',
+        error: error.message
+      };
+    }
   },
 };
 
@@ -398,6 +488,148 @@ export const notificationAPI = {
   // Delete all notifications
   deleteAllNotifications: async (token) => {
     const response = await fetch(`${API_URL}/notifications`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+};
+
+// Contact/Support API calls
+export const contactAPI = {
+  submitInquiry: async (contactData) => {
+    const response = await fetch(`${API_URL}/contact/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(contactData),
+    });
+    return response.json();
+  },
+};
+
+// Menu API calls
+export const menuAPI = {
+  getVenueMenus: async (venueId) => {
+    const response = await fetch(`${API_URL}/menus/venue/${venueId}`);
+    return response.json();
+  },
+
+  getMenu: async (menuId) => {
+    const response = await fetch(`${API_URL}/menus/${menuId}`);
+    return response.json();
+  },
+
+  createMenu: async (token, venueId, menuData) => {
+    const response = await fetch(`${API_URL}/menus/venue/${venueId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(menuData),
+    });
+    return response.json();
+  },
+
+  updateMenu: async (token, menuId, menuData) => {
+    const response = await fetch(`${API_URL}/menus/${menuId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(menuData),
+    });
+    return response.json();
+  },
+
+  deleteMenu: async (token, menuId) => {
+    const response = await fetch(`${API_URL}/menus/${menuId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+
+  addMenuItem: async (token, menuId, itemData) => {
+    const response = await fetch(`${API_URL}/menus/${menuId}/items`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(itemData),
+    });
+    return response.json();
+  },
+
+  updateMenuItem: async (token, menuId, itemId, itemData) => {
+    const response = await fetch(`${API_URL}/menus/${menuId}/items/${itemId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(itemData),
+    });
+    return response.json();
+  },
+
+  deleteMenuItem: async (token, menuId, itemId) => {
+    const response = await fetch(`${API_URL}/menus/${menuId}/items/${itemId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+};
+
+// Package API calls
+export const packageAPI = {
+  getVenuePackages: async (venueId) => {
+    const response = await fetch(`${API_URL}/packages/venue/${venueId}`);
+    return response.json();
+  },
+
+  getPackage: async (packageId) => {
+    const response = await fetch(`${API_URL}/packages/${packageId}`);
+    return response.json();
+  },
+
+  createPackage: async (token, venueId, packageData) => {
+    const response = await fetch(`${API_URL}/packages/venue/${venueId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(packageData),
+    });
+    return response.json();
+  },
+
+  updatePackage: async (token, packageId, packageData) => {
+    const response = await fetch(`${API_URL}/packages/${packageId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(packageData),
+    });
+    return response.json();
+  },
+
+  deletePackage: async (token, packageId) => {
+    const response = await fetch(`${API_URL}/packages/${packageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

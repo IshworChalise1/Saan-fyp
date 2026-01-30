@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navigation from './components/Navigation';
 import AboutUs from './pages/user/AboutUs';
 import BrowseVenue from './pages/user/BrowseVenue';
+import UserVenueDetail from './pages/user/UserVenueDetail';
 import CustomerInquiry from './pages/user/CustomerInquiry';
 import UserHome from './pages/user/UserHome';
 
@@ -22,6 +23,8 @@ import BookingCompleted from './pages/venue-owner/BookingCompleted';
 import VenueEvents from './pages/venue-owner/VenueEvents';
 import VenueGallery from './pages/venue-owner/VenueGallery';
 import VenueOwnerProfile from './pages/venue-owner/VenueOwnerProfile';
+import VenueMenuAndPackageManagement from './pages/venue-owner/VenueMenuAndPackageManagement';
+import EditVenueDetails from './pages/venue-owner/EditVenueDetails';
 
 // Auth imports
 import UserLogin from './pages/auth/UserLogin';
@@ -97,6 +100,18 @@ function App() {
           />
 
           <Route
+            path="/venue/:venueId"
+            element={
+              <ProtectedRoute allowedRoles={['user', 'admin', 'venue-owner']}>
+                <>
+                  <Navigation />
+                  <UserVenueDetail />
+                </>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/customer-inquiry"
             element={
               <ProtectedRoute allowedRoles={['user', 'admin', 'venue-owner']}>
@@ -160,8 +175,10 @@ function App() {
             <Route path="bookings/confirmed" element={<BookingConfirmed />} />
             <Route path="bookings/completed" element={<BookingCompleted />} />
             <Route path="events" element={<VenueEvents />} />
+            <Route path="menu/:venueId" element={<VenueMenuAndPackageManagement />} />
             <Route path="gallery" element={<VenueGallery />} />
             <Route path="profile" element={<VenueOwnerProfile />} />
+            <Route path="edit-venue/:venueId" element={<EditVenueDetails />} />
           </Route>
 
           {/* Redirect /home to / for backwards compatibility */}

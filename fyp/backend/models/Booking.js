@@ -24,6 +24,34 @@ const bookingSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  selectedMenuItems: [{
+    menuId: String,
+    menuName: String,
+    itemId: String,
+    itemName: String,
+    price: Number,
+    quantity: Number
+  }],
+  selectedPackage: {
+    packageId: String,
+    packageName: String,
+    packageType: String,
+    basePrice: Number
+  },
+  selectedAddOns: {
+    decoration: {
+      enabled: Boolean,
+      price: Number
+    },
+    soundSystem: {
+      enabled: Boolean,
+      price: Number
+    },
+    bartender: {
+      enabled: Boolean,
+      price: Number
+    }
+  },
   specialRequests: {
     type: String,
     trim: true

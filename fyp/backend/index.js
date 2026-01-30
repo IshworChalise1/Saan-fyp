@@ -20,6 +20,9 @@ import bookingRoute from './route/bookingRoute.js';
 import otpRoutes from './route/otpRoutes.js';
 import venueRegistrationRoute from './route/venueRegistrationRoute.js';
 import notificationRoute from './route/notificationRoute.js';
+import contactRoute from './route/contactRoute.js';
+import menuRoute from './route/menuRoute.js';
+import packageRoute from './route/packageRoute.js';
 
 const app = express();
 
@@ -58,6 +61,9 @@ app.use('/api/bookings', bookingRoute);
 app.use('/api/otp', otpRoutes);
 app.use('/api/venue-registration', venueRegistrationRoute);
 app.use('/api/notifications', notificationRoute);
+app.use('/api/contact', contactRoute);
+app.use('/api/menus', menuRoute);
+app.use('/api/packages', packageRoute);
 
 // 404 handler
 app.use((req, res) => {

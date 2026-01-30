@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { adminVenueRegistrationAPI, bookingAPI, menuAPI, packageAPI } from "../../services/api";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -15,27 +16,53 @@ function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading stats - replace with actual API call
-    const loadStats = async () => {
+    const fetchStats = async () => {
       setIsLoading(true);
       try {
-        // TODO: Replace with actual API calls
-        // const response = await adminAPI.getDashboardStats();
+        const token = localStorage.getItem("token");
+        
+        // Fetch all registrations
+        const registrationResponse = await adminVenueRegistrationAPI.getAllRegistrations(token);
+        const allRegistrations = registrationResponse.registrations || [];
+        
+        const pendingCount = allRegistrations.filter(r => r.registrationStatus === 'PENDING').length;
+        const approvedVenues = allRegistrations.filter(r => r.registrationStatus === 'APPROVED').length;
+
+        // Get total bookings (sum from all venues)
+        let totalBookings = 0;
+        for (const reg of allRegistrations) {
+          if (reg.venue) {
+            try {
+              const bookingsResponse = await bookingAPI.getVenueBookings(reg.venue, token);
+              totalBookings += (bookingsResponse.bookings || []).length;
+            } catch (error) {
+              // Skip if error fetching for this venue
+            }
+          }
+        }
+
         setStats({
-          totalUsers: 156,
-          totalVenues: 42,
-          totalBookings: 328,
-          pendingRegistrations: 8,
-          revenue: 245000,
-          activeVenues: 38,
+          totalUsers: 0, // Would need user API
+          totalVenues: allRegistrations.length,
+          totalBookings: totalBookings,
+          pendingRegistrations: pendingCount,
+          revenue: 0, // Would need payment API
+          activeVenues: approvedVenues,
         });
 
-        setRecentRegistrations([
-          { id: 1, venueName: "Royal Palace Banquet", owner: "Ram Shrestha", status: "PENDING", date: "2024-01-05" },
-          { id: 2, venueName: "Garden View Party Palace", owner: "Sita Maharjan", status: "UNDER_REVIEW", date: "2024-01-04" },
-          { id: 3, venueName: "Himalayan Convention", owner: "Hari Thapa", status: "PENDING", date: "2024-01-04" },
-          { id: 4, venueName: "Sunrise Banquet", owner: "Maya Gurung", status: "APPROVED", date: "2024-01-03" },
-        ]);
+        // Set recent registrations (last 5)
+        const recent = allRegistrations
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5)
+          .map(reg => ({
+            id: reg._id,
+            venueName: reg.venueName || 'N/A',
+            owner: reg.owner?.name || 'Unknown',
+            status: reg.registrationStatus || 'PENDING',
+            date: new Date(reg.createdAt).toLocaleDateString()
+          }));
+
+        setRecentRegistrations(recent);
       } catch (error) {
         console.error("Error loading stats:", error);
       } finally {
@@ -43,7 +70,7 @@ function AdminDashboard() {
       }
     };
 
-    loadStats();
+    fetchStats();
   }, []);
 
   const getStatusBadge = (status) => {

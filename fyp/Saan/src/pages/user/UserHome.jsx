@@ -11,6 +11,7 @@ import {
   FaTiktok
 } from "react-icons/fa";
 import Navigation from "../../components/Navigation";
+import { venueAPI } from "../../services/api";
 
 function UserHome() {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ function UserHome() {
     date: "",
     attendees: "",
   });
+  const [venues, setVenues] = useState([]);
+  const [loadingVenues, setLoadingVenues] = useState(true);
 
   // Check if user is logged in
   useEffect(() => {
@@ -31,75 +34,39 @@ function UserHome() {
     }
   }, [navigate]);
 
-  // Mock venue data
-  const venues = [
-    {
-      id: 1,
-      name: "Grand SAN Banquet",
-      image:
-        "https://images.unsplash.com/photo-1519677100203-3f3e5d046410?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      rating: 4.8,
-      location: "Kathmandu, Kapan",
-      capacity: 500,
-      type: "Wedding",
-      price: "NPR 250,000",
-    },
-    {
-      id: 2,
-      name: "Elegant Gardens",
-      image:
-        "https://images.unsplash.com/photo-1519167758481-dc80ecac1d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      rating: 4.6,
-      location: "Chabahil, Kathmandu",
-      capacity: 300,
-      type: "Wedding",
-      price: "NPR 180,000",
-    },
-    {
-      id: 3,
-      name: "Corporate Hub",
-      image:
-        "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      rating: 4.7,
-      location: "Thimi, Bhaktapur",
-      capacity: 400,
-      type: "Corporate",
-      price: "NPR 150,000",
-    },
-    {
-      id: 4,
-      name: "Riverside Convention",
-      image:
-        "https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      rating: 4.5,
-      location: "Lalitpur, Patan",
-      capacity: 600,
-      type: "Conference",
-      price: "NPR 200,000",
-    },
-    {
-      id: 5,
-      name: "Mountain View Resort",
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      rating: 4.9,
-      location: "Kathmandu, Nepal",
-      capacity: 350,
-      type: "Wedding",
-      price: "NPR 300,000",
-    },
-    {
-      id: 6,
-      name: "Royal Banquet Hall",
-      image:
-        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      rating: 4.4,
-      location: "Lalitpur, Nepal",
-      capacity: 250,
-      type: "Wedding",
-      price: "NPR 120,000",
-    },
-  ];
+  // Fetch first 6 approved venues from API
+  useEffect(() => {
+    const fetchTopVenues = async () => {
+      try {
+        setLoadingVenues(true);
+        const response = await venueAPI.getApprovedVenues();
+        
+        if (response.success && response.venues && response.venues.length > 0) {
+          // Transform API data and take only first 6 venues
+          const topVenues = response.venues.slice(0, 6).map(venue => ({
+            id: venue._id,
+            name: venue.name || 'Unnamed Venue',
+            image: venue.images && venue.images.length > 0 
+              ? venue.images[0] 
+              : "https://images.unsplash.com/photo-1519677100203-3f3e5d046410?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            rating: venue.rating || 4.8,
+            location: `${venue.city || 'Location'}${venue.address ? ', ' + venue.address : ''}`,
+            capacity: venue.capacity || 500,
+            type: venue.type || 'Wedding',
+            price: `NPR ${(venue.pricePerDay || 250000).toLocaleString()}`,
+          }));
+          setVenues(topVenues);
+        }
+      } catch (error) {
+        console.error('Error fetching venues:', error);
+        setVenues([]);
+      } finally {
+        setLoadingVenues(false);
+      }
+    };
+
+    fetchTopVenues();
+  }, []);
 
   // Event types for dropdown
   const eventTypes = [
@@ -266,62 +233,81 @@ function UserHome() {
           </p>
         </div>
 
-        {/* Venues Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {venues.map((venue) => (
-            <div
-              key={venue.id}
-              className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {/* Venue Image */}
-              <div className="relative h-56 md:h-64 overflow-hidden">
-                <img
-                  src={venue.image}
-                  alt={venue.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 right-4">
-                  <span className="bg-[#5d0f0f] text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
-                    {venue.type}
-                  </span>
-                </div>
-                <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm">
-                  {venue.price}
-                </div>
-              </div>
+        {/* Loading State */}
+        {loadingVenues ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#5d0f0f] mb-4"></div>
+              <p className="text-gray-600">Loading venues...</p>
+            </div>
+          </div>
+        ) : venues.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-gray-600">No venues available at the moment</p>
+          </div>
+        ) : (
+          <>
+            {/* Venues Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {venues.map((venue) => (
+                <div
+                  key={venue.id}
+                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  {/* Venue Image */}
+                  <div className="relative h-56 md:h-64 overflow-hidden">
+                    <img
+                      src={venue.image}
+                      alt={venue.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1519677100203-3f3e5d046410?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                      }}
+                    />
+                    <div className="absolute top-4 right-4">
+                      <span className="bg-[#5d0f0f] text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+                        {venue.type}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm">
+                      {venue.price}
+                    </div>
+                  </div>
 
-              {/* Venue Details */}
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-xl font-bold text-gray-900 line-clamp-1">
-                    {venue.name}
-                  </h3>
-                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded">
-                    <FaStar className="text-yellow-400 mr-1" />
-                    <span className="font-bold text-gray-900">{venue.rating}</span>
+                  {/* Venue Details */}
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-bold text-gray-900 line-clamp-1">
+                        {venue.name}
+                      </h3>
+                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded">
+                        <FaStar className="text-yellow-400 mr-1" />
+                        <span className="font-bold text-gray-900">{venue.rating}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center text-gray-600 mb-3">
+                      <FaMapMarkerAlt className="text-gray-400 mr-2" />
+                      <span className="text-sm">{venue.location}</span>
+                    </div>
+
+                    <div className="flex items-center text-gray-600 mb-6">
+                      <FaUsers className="text-gray-400 mr-2" />
+                      <span className="text-sm">Capacity: {venue.capacity} guests</span>
+                    </div>
+
+                    <button 
+                      onClick={() => handleVenueClick(venue.id)}
+                      className="w-full bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center text-gray-600 mb-3">
-                  <FaMapMarkerAlt className="text-gray-400 mr-2" />
-                  <span className="text-sm">{venue.location}</span>
-                </div>
-
-                <div className="flex items-center text-gray-600 mb-6">
-                  <FaUsers className="text-gray-400 mr-2" />
-                  <span className="text-sm">Capacity: {venue.capacity} guests</span>
-                </div>
-
-                <button 
-                  onClick={() => handleVenueClick(venue.id)}
-                  className="w-full bg-gradient-to-r from-[#5d0f0f] to-[#7a1c1c] text-white py-3 rounded-xl hover:from-[#4a0c0c] hover:to-[#651616] font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  View Details
-                </button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
         {/* View All Button */}
         <div className="text-center mt-12">

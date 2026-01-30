@@ -116,6 +116,17 @@ const venueRegistrationSchema = new mongoose.Schema({
   location: locationSchema,
   locationStatus: documentStatusSchema,
 
+  // Venue Capacity Details
+  capacity: {
+    type: Number,
+    default: null
+  },
+
+  numberOfHalls: {
+    type: Number,
+    default: null
+  },
+
   // Overall Registration Status
   registrationStatus: {
     type: String,
@@ -144,6 +155,13 @@ const venueRegistrationSchema = new mongoose.Schema({
   },
   rejectedAt: {
     type: Date,
+    default: null
+  },
+
+  // Reference to the created Venue (set after approval)
+  venue: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Venue',
     default: null
   }
 }, {
